@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Genie — Rider Portal</title>
+    <meta name="description" content="Food Genie Rider Portal — manage your deliveries, orders and earnings." />
+
+    <!-- Tailwind CSS CDN (same config as Stitch exports) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Shared Tailwind config — exact copy from Stitch exports -->
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "secondary": "#b7102a",
+              "outline": "#8d7168",
+              "on-tertiary-container": "#432e00",
+              "on-secondary": "#ffffff",
+              "background": "#fbf8ff",
+              "on-primary": "#ffffff",
+              "secondary-container": "#db313f",
+              "on-secondary-fixed-variant": "#92001c",
+              "surface-dim": "#d7d8f4",
+              "error": "#ba1a1a",
+              "surface-variant": "#e0e0fc",
+              "surface-bright": "#fbf8ff",
+              "on-error": "#ffffff",
+              "primary-fixed": "#ffdbd0",
+              "outline-variant": "#e1bfb5",
+              "inverse-surface": "#2d2f44",
+              "primary": "#ab3500",
+              "surface-container-low": "#f4f2ff",
+              "on-background": "#181a2e",
+              "on-tertiary-fixed": "#271900",
+              "secondary-fixed-dim": "#ffb3b1",
+              "on-primary-fixed": "#390c00",
+              "on-primary-container": "#5f1900",
+              "surface-container-high": "#e6e6ff",
+              "surface-container": "#edecff",
+              "on-primary-fixed-variant": "#832600",
+              "on-error-container": "#93000a",
+              "tertiary-fixed-dim": "#ffba27",
+              "surface-container-highest": "#e0e0fc",
+              "tertiary-fixed": "#ffdea9",
+              "inverse-on-surface": "#f1efff",
+              "error-container": "#ffdad6",
+              "on-tertiary-fixed-variant": "#5e4100",
+              "inverse-primary": "#ffb59d",
+              "on-surface-variant": "#594139",
+              "secondary-fixed": "#ffdad8",
+              "on-secondary-fixed": "#410007",
+              "on-secondary-container": "#fffbff",
+              "surface": "#fbf8ff",
+              "tertiary-container": "#c98f00",
+              "primary-container": "#ff6b35",
+              "tertiary": "#7d5800",
+              "surface-container-lowest": "#ffffff",
+              "primary-fixed-dim": "#ffb59d",
+              "surface-tint": "#ab3500",
+              "on-surface": "#181a2e"
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px"
+            },
+            spacing: {
+              gutter: "16px",
+              "margin-mobile": "16px",
+              "margin-desktop": "32px",
+              lg: "24px",
+              sm: "8px",
+              base: "4px",
+              md: "16px",
+              xl: "32px",
+              xs: "4px"
+            },
+            fontFamily: {
+              "headline-lg": ["Inter"],
+              "status-badge": ["Inter"],
+              "headline-lg-mobile": ["Inter"],
+              "label-md": ["Inter"],
+              "label-bold": ["Inter"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+              "headline-md": ["Inter"]
+            },
+            fontSize: {
+              "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+              "status-badge": ["12px", { lineHeight: "16px", fontWeight: "800" }],
+              "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+              "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+              "label-bold": ["14px", { lineHeight: "20px", fontWeight: "700" }],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "body-lg": ["18px", { lineHeight: "26px", fontWeight: "400" }],
+              "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }]
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .order-card-border { border-left: 4px solid #FF6B35; }
+      .accent-card-border { border-left: 4px solid #FFB703; }
+      .earnings-card { background: #FFF8F0; border-left: 4px solid #ff6b35; }
+      .pulsing-status { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .map-route-container { position: relative; overflow: hidden; }
+      .route-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: dash 5s linear forwards; }
+      @keyframes dash { to { stroke-dashoffset: 0; } }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: #fbf8ff; }
+      ::-webkit-scrollbar-thumb { background: #ffdbd0; border-radius: 10px; }
+      
+      /* Splash & Onboarding Styles */
+      .onboarding-gradient {
+        background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, rgba(251, 248, 255, 0) 70%);
+      }
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+      }
+      .animate-pulse-soft {
+        animation: 3s ease-in-out infinite pulse-soft;
+      }
+      #splash-screen.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.8s, visibility 0.8s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
