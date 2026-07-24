@@ -2,41 +2,42 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOrders, useDelivery, useAuth } from '../context/AppContext'
 import BottomNav from '../components/BottomNav'
+import API from '../api'
 
 // Delivery status machine — matches Stitch export visual tracker
 const STATUS_STEPS = [
-  { key: 'accepted',   label: 'Accepted',   icon: 'receipt_long' },
-  { key: 'picked_up',  label: 'Picked Up',  icon: 'check' },
+  { key: 'accepted', label: 'Accepted', icon: 'receipt_long' },
+  { key: 'picked_up', label: 'Picked Up', icon: 'check' },
   { key: 'on_the_way', label: 'On the Way', icon: 'delivery_dining' },
-  { key: 'delivered',  label: 'Delivered',  icon: 'flag' },
+  { key: 'delivered', label: 'Delivered', icon: 'flag' },
 ]
 
 const ROUTE_COORDINATES = [
-  [30.0450, 72.3381], // Start: Burger Genie Central (Club Road / Garrison Park)
-  [30.0447, 72.3381], // Moving south on Club Road
+  [30.0450, 72.3381],
+  [30.0447, 72.3381],
   [30.0444, 72.3381],
-  [30.0442, 72.3381], // Junction of Club Rd & Multan Rd
-  [30.0442, 72.3400], // Turning East on Jinnah Shaheed Rd
+  [30.0442, 72.3381],
+  [30.0442, 72.3400],
   [30.0442, 72.3420],
-  [30.0442, 72.3441], // V-Chowk
+  [30.0442, 72.3441],
   [30.0442, 72.3460],
   [30.0442, 72.3480],
   [30.0442, 72.3500],
   [30.0442, 72.3520],
-  [30.0442, 72.3540], // Turn south at People's Colony Rd
-  [30.0435, 72.3540], // Going south on People's Colony Rd
+  [30.0442, 72.3540],
+  [30.0435, 72.3540],
   [30.0430, 72.3540],
   [30.0425, 72.3540],
-  [30.0415, 72.3540]  // End: James Wilson (Customer)
+  [30.0415, 72.3540]
 ]
 
 function getButtonLabel(status) {
   switch (status) {
-    case 'accepted':   return 'Confirm Pickup'
-    case 'picked_up':  return 'Start Delivery'
+    case 'accepted': return 'Confirm Pickup'
+    case 'picked_up': return 'Start Delivery'
     case 'on_the_way': return 'Mark as Delivered'
-    case 'delivered':  return '✓ Delivered!'
-    default:           return 'Next Step'
+    case 'delivered': return '✓ Delivered!'
+    default: return 'Next Step'
   }
 }
 
@@ -44,13 +45,60 @@ export default function ActiveDelivery() {
   const navigate = useNavigate()
   const { currentOrder, clearCurrentOrder } = useOrders()
   const { deliveryStatus, advanceStatus, completeDelivery, resetStatus } = useDelivery()
-  const { rider, toggleOnline, notifications, setIsNotifOpen } = useAuth()
+  const { rider } = useAuth()
 
   const [processingDelivered, setProcessingDelivered] = useState(false)
   const [currentRouteStepIdx, setCurrentRouteStepIdx] = useState(0)
 
   const mapRef = useRef(null)
   const markerRef = useRef(null)
+
+  // Geolocation watch effect
+  useEffect(() => {
+    if (!navigator.geolocation || !rider?.id) return
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        try {
+          await API.patch(`/api/riders/${rider.id}/location`, { latitude, longitude })
+        } catch (err) {
+          console.error('Failed to send GPS location:', err)
+        }
+      },
+      (err) => console.log('Geolocation error:', err),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [rider?.id])
+
+  async function handleActionButton() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const orderId = order.id
+
+    if (deliveryStatus === 'on_the_way') {
+      setProcessingDelivered(true)
+      try {
+        await API.patch(`/api/orders/${orderId}/status`, { status: 'delivered', rider_id: user.id || rider?.id })
+      } catch (err) {
+        console.error('Failed to update status to delivered', err)
+      }
+      setTimeout(() => {
+        completeDelivery({ id: order.id, payout: order.payout })
+        clearCurrentOrder()
+        resetStatus()
+        setProcessingDelivered(false)
+        navigate('/orders')
+      }, 1500)
+    } else if (deliveryStatus !== 'delivered') {
+      const nextStatus = deliveryStatus === 'accepted' ? 'preparing' : 'out_for_delivery'
+      try {
+        await API.patch(`/api/orders/${orderId}/status`, { status: nextStatus, rider_id: user.id || rider?.id })
+      } catch (err) {
+        console.error('Failed to update status', err)
+      }
+      advanceStatus()
+    }
+  }
 
   // Initialize Map
   useEffect(() => {

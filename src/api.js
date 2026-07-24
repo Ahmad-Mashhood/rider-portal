@@ -1,18 +1,30 @@
-// Shared API utility for rider-portal
-const BASE = '/api/rider';
+import axios from 'axios'
 
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-});
+const API = axios.create({
+    baseURL: 'http://localhost:8000',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
 
-export const api = {
-  post: (path, body) =>
-    fetch(`${BASE}${path}`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }).then(r => r.json()),
-  get: (path) =>
-    fetch(`${BASE}${path}`, { headers: getHeaders() }).then(r => r.json()),
-  put: (path, body) =>
-    fetch(`${BASE}${path}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }).then(r => r.json()),
-  delete: (path) =>
-    fetch(`${BASE}${path}`, { method: 'DELETE', headers: getHeaders() }).then(r => r.json()),
-};
+API.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+})
+
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+        }
+        return Promise.reject(error)
+    }
+)
+
+export default API

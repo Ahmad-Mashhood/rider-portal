@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AppContext'
+import API from '../api'
 import logo from '../assets/logo_transparent.png'
 
 const GoogleSVG = () => (
@@ -61,37 +62,31 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const url = tab === 'login' ? '/api/rider/login' : '/api/rider/register'
-    const body = tab === 'login' ? { email, password } : { name, email, phone, password }
-
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-      const data = await response.json()
+      const endpoint = tab === 'login' ? '/api/auth/login' : '/api/auth/register'
+      const payload = tab === 'login'
+        ? { email, password }
+        : { name, email, phone, password, role: 'rider' }
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed. Please check your credentials.')
-      }
+      const res = await API.post(endpoint, payload)
+      const data = res.data
+      const riderObj = data.user || data.rider || { name, email, role: 'rider' }
 
-      // Save token and rider info
       localStorage.setItem('token', data.token)
-      localStorage.setItem('rider', JSON.stringify(data.rider))
+      localStorage.setItem('user', JSON.stringify(riderObj))
+      localStorage.setItem('rider', JSON.stringify(riderObj))
       
-      // Update app context
       setRider({
-        name: data.rider.name,
-        email: data.rider.email,
-        phone: data.rider.phone || '',
+        name: riderObj.name || 'Rider',
+        email: riderObj.email || email,
+        phone: riderObj.phone || phone || '',
         isOnline: true
       })
 
       navigate('/dashboard')
     } catch (err) {
       console.error('Auth error:', err)
-      setError(err.message)
+      setError(err.response?.data?.detail || err.message || 'Authentication failed. Please check your credentials.')
     } finally {
       setLoading(false)
     }
