@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AppContext'
 import API from '../api'
+import { loginWithGoogle } from '../api/googleAuth'
 import logo from '../assets/logo_transparent.png'
 
 const GoogleSVG = () => (
@@ -32,7 +33,32 @@ export default function LoginPage() {
     return () => window.removeEventListener('message', handleAuthMessage)
   }, [navigate, setRider])
 
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await loginWithGoogle('rider')
+      if (data.user) {
+        setRider({
+          name: data.user.name || 'Rider',
+          email: data.user.email,
+          phone: data.user.phone || '',
+          isOnline: true
+        })
+      }
+      navigate('/deliveries')
+    } catch (err) {
+      setError(err.message || 'Google login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSocialLogin = (provider) => {
+    if (provider === 'google') {
+      handleGoogleLogin()
+      return
+    }
     const width = 500
     const height = 600
     const left = window.screenX + (window.outerWidth - width) / 2
@@ -289,11 +315,19 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => handleSocialLogin('google')}
-                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-[#e1bfb5]/50 rounded-full hover:bg-[#fff1ed] transition-colors active:scale-95 cursor-pointer shadow-sm"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-[#e1bfb5]/50 rounded-full hover:bg-[#fff1ed] transition-colors active:scale-95 cursor-pointer shadow-sm disabled:opacity-50"
               >
-                <GoogleSVG />
-                <span className="text-[14px] font-semibold text-slate-800">Google</span>
+                <img
+                  src="https://developers.google.com/identity/images/g-logo.png"
+                  width="20"
+                  height="20"
+                  alt="Google"
+                />
+                <span className="text-[14px] font-semibold text-slate-800">
+                  {loading ? 'Signing in...' : 'Google'}
+                </span>
               </button>
               <button
                 type="button"

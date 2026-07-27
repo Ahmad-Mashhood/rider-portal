@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useReducer, useState } from 'react'
+import { auth } from '../firebase'
+import { signOut } from 'firebase/auth'
 
 // ─── Initial Data ────────────────────────────────────────────────────────────
 
@@ -152,10 +154,15 @@ export function AppProvider({ children }) {
     localStorage.setItem('rider', JSON.stringify(updated))
     return updated
   })
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await signOut(auth)
+    } catch (e) {}
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     localStorage.removeItem('rider')
     setRider(null)
+    window.location.href = '/login'
   }
 
   // Notifications
