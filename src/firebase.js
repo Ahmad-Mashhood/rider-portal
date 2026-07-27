@@ -7,12 +7,13 @@ import {
 } from 'firebase/auth'
 
 const firebaseConfig = {
-    apiKey: "REPLACE_WITH_YOUR_API_KEY",
-    authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-    projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-    storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-    messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
-    appId: "REPLACE_WITH_YOUR_APP_ID"
+    apiKey: "AIzaSyDxXKJvx9XDWoFLdXnctP42BLFPrhmeAcA",
+    authDomain: "food-genie-c07a7.firebaseapp.com",
+    projectId: "food-genie-c07a7",
+    storageBucket: "food-genie-c07a7.firebasestorage.app",
+    messagingSenderId: "92326725096",
+    appId: "1:92326725096:web:6e35fdbcada0c2739c505d",
+    measurementId: "G-GGXEL54DLS"
 }
 
 const app = initializeApp(firebaseConfig)
