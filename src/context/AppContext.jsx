@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useState } from 'react'
+import React, { createContext, useContext, useReducer, useState, useEffect } from 'react'
 import { auth } from '../firebase'
 import { signOut } from 'firebase/auth'
+import API from '../api'
 
 // ─── Initial Data ────────────────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ function deliveryReducer(state, action) {
 export function AppProvider({ children }) {
   // Auth
   const [rider, setRider] = useState(() => {
-    const saved = localStorage.getItem('rider')
+    const saved = localStorage.getItem('rider') || localStorage.getItem('user')
     if (saved) {
       const parsed = JSON.parse(saved)
       if (!parsed.area) parsed.area = 'Jinnah Shaheed Road, Vehari'
@@ -148,6 +149,30 @@ export function AppProvider({ children }) {
     }
     return null
   })
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return
+        const res = await API.get('/api/auth/me')
+        if (res.data) {
+          const fresh = res.data
+          const updated = {
+            name: fresh.name || 'Rider',
+            email: fresh.email,
+            phone: fresh.phone || '',
+            isOnline: true,
+            area: 'Jinnah Shaheed Road, Vehari'
+          }
+          setRider(updated)
+          localStorage.setItem('rider', JSON.stringify(updated))
+          localStorage.setItem('user', JSON.stringify(fresh))
+        }
+      } catch (err) {}
+    }
+    fetchMe()
+  }, [])
   const toggleOnline = () => setRider(r => {
     if (!r) return null
     const updated = { ...r, isOnline: !r.isOnline }
