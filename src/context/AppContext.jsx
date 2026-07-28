@@ -5,44 +5,7 @@ import API from '../api'
 
 // ─── Initial Data ────────────────────────────────────────────────────────────
 
-const INITIAL_ORDERS = [
-  {
-    id: 'FG-2045',
-    restaurant: 'The Burger Joint',
-    restaurantAddress: '45th Main, Central Plaza',
-    customerAddress: '128 Oak Street, Apt 4B',
-    distance: '2.4 km',
-    payout: 15.50,
-    borderClass: 'order-card-border',
-    restaurantImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGBt_SNvzjOir_DrIiYa-s0xNegjaBzHiMp17lm8-VshQahQjqzwrEYEszg7yQ7LW38IipQJKdD4YZltw55AGB__3hoTdLhbxMMNEvYoihvyqGpHmHf2DAS_JtFyS7K68e6HeBDgSOpRXf1W-cwGIx_yF74rCG-6BZQP1MCeXMjxp8cBkaMzHOkcZo6P4EKxhJrB9BTcoe19Vr3JAONiyA3REE7dOWkhlEjdRJyfKdaRt-w-VcCM7iwjQC887Rmu_RrmI6pX9BqSO0',
-    customer: { name: 'James Wilson', address: 'Apt 4B, 112 W 34th St' },
-    estimatedTime: '8 mins',
-  },
-  {
-    id: 'FG-2102',
-    restaurant: 'Pasta House Express',
-    restaurantAddress: 'Boutique Mall, North Wing',
-    customerAddress: '782 Pine Avenue',
-    distance: '1.8 km',
-    payout: 11.20,
-    borderClass: 'accent-card-border',
-    restaurantImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGBt_SNvzjOir_DrIiYa-s0xNegjaBzHiMp17lm8-VshQahQjqzwrEYEszg7yQ7LW38IipQJKdD4YZltw55AGB__3hoTdLhbxMMNEvYoihvyqGpHmHf2DAS_JtFyS7K68e6HeBDgSOpRXf1W-cwGIx_yF74rCG-6BZQP1MCeXMjxp8cBkaMzHOkcZo6P4EKxhJrB9BTcoe19Vr3JAONiyA3REE7dOWkhlEjdRJyfKdaRt-w-VcCM7iwjQC887Rmu_RrmI6pX9BqSO0',
-    customer: { name: 'Maria Chen', address: '782 Pine Avenue, Unit 5' },
-    estimatedTime: '12 mins',
-  },
-  {
-    id: 'FG-2198',
-    restaurant: 'Burger Genie Central',
-    restaurantAddress: '452 Broadway, Manhattan',
-    customerAddress: 'Apt 4B, 112 W 34th St',
-    distance: '3.1 km',
-    payout: 18.00,
-    borderClass: 'order-card-border',
-    restaurantImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGBt_SNvzjOir_DrIiYa-s0xNegjaBzHiMp17lm8-VshQahQjqzwrEYEszg7yQ7LW38IipQJKdD4YZltw55AGB__3hoTdLhbxMMNEvYoihvyqGpHmHf2DAS_JtFyS7K68e6HeBDgSOpRXf1W-cwGIx_yF74rCG-6BZQP1MCeXMjxp8cBkaMzHOkcZo6P4EKxhJrB9BTcoe19Vr3JAONiyA3REE7dOWkhlEjdRJyfKdaRt-w-VcCM7iwjQC887Rmu_RrmI6pX9BqSO0',
-    customer: { name: 'David Park', address: '45 Cedar Ave, Apt 2C' },
-    estimatedTime: '15 mins',
-  },
-]
+const INITIAL_ORDERS = []
 
 // ─── Auth Context ─────────────────────────────────────────────────────────────
 
