@@ -122,9 +122,11 @@ export function AppProvider({ children }) {
         if (res.data) {
           const fresh = res.data
           const updated = {
+            id: fresh.id,
             name: fresh.name || 'Rider',
             email: fresh.email,
             phone: fresh.phone || '',
+            is_approved: fresh.is_approved !== false,
             isOnline: true,
             area: 'Jinnah Shaheed Road, Vehari'
           }

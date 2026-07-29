@@ -2,75 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AppContext'
 import API from '../api'
-import { loginWithGoogle } from '../api/googleAuth'
+import { loginRiderWithGoogle, completeRiderOnboarding } from '../api/googleAuth'
 import logo from '../assets/logo_transparent.png'
-
-const GoogleSVG = () => (
-  <svg className="w-5 h-5 animate-pulse-soft" viewBox="0 0 24 24">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </svg>
-)
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { setRider } = useAuth()
 
-  useEffect(() => {
-    const handleAuthMessage = (event) => {
-      if (event.origin !== window.location.origin) return
-      if (event.data?.type === 'SOCIAL_AUTH_SUCCESS') {
-        const { token, user } = event.data
-        localStorage.setItem('token', token)
-        localStorage.setItem('rider', JSON.stringify(user))
-        setRider(user)
-        navigate('/dashboard')
-      }
-    }
-    window.addEventListener('message', handleAuthMessage)
-    return () => window.removeEventListener('message', handleAuthMessage)
-  }, [navigate, setRider])
-
-  const handleGoogleLogin = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await loginWithGoogle('rider')
-      if (data.user) {
-        setRider({
-          name: data.user.name || 'Rider',
-          email: data.user.email,
-          phone: data.user.phone || '',
-          isOnline: true
-        })
-      }
-      navigate('/deliveries')
-    } catch (err) {
-      setError(err.message || 'Google login failed')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSocialLogin = (provider) => {
-    if (provider === 'google') {
-      handleGoogleLogin()
-      return
-    }
-    const width = 500
-    const height = 600
-    const left = window.screenX + (window.outerWidth - width) / 2
-    const top = window.screenY + (window.outerHeight - height) / 2
-    
-    window.open(
-      `/mock-auth/${provider}`,
-      `Sign in with ${provider}`,
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
-    )
-  }
-  
   const [tab, setTab] = useState('login') // 'login' | 'signup'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -82,7 +20,61 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
 
-  // Handle real API authentication
+  // Rider Google Onboarding Modal state
+  const [onboardingData, setOnboardingData] = useState(null)
+  const [onboardPhone, setOnboardPhone] = useState('')
+  const [onboardPassword, setOnboardPassword] = useState('')
+  const [onboardError, setOnboardError] = useState('')
+
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await loginRiderWithGoogle()
+      setLoading(false)
+      if (data?.requires_details) {
+        setOnboardingData(data)
+      } else if (data.token) {
+        const riderObj = data.user || { name: 'Rider', email: data.user?.email }
+        setRider({
+          ...riderObj,
+          isOnline: true
+        })
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      setLoading(false)
+      setError(err.message || 'Google login failed')
+    }
+  }
+
+  const handleCompleteOnboarding = async (e) => {
+    e.preventDefault()
+    if (!onboardPhone.trim() || !onboardPassword.trim()) {
+      setOnboardError('Please enter your phone number and set your password.')
+      return
+    }
+    setLoading(true)
+    setOnboardError('')
+    try {
+      const data = await completeRiderOnboarding(onboardingData.firebaseToken, {
+        phone: onboardPhone.trim(),
+        password: onboardPassword.trim()
+      })
+      setLoading(false)
+      setOnboardingData(null)
+      const riderObj = data.user || { name: 'Rider', email: data.user?.email }
+      setRider({
+        ...riderObj,
+        isOnline: true
+      })
+      navigate('/dashboard')
+    } catch (err) {
+      setLoading(false)
+      setOnboardError(err.response?.data?.detail || err.message || 'Failed to complete registration.')
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -103,9 +95,7 @@ export default function LoginPage() {
       localStorage.setItem('rider', JSON.stringify(riderObj))
       
       setRider({
-        name: riderObj.name || 'Rider',
-        email: riderObj.email || email,
-        phone: riderObj.phone || phone || '',
+        ...riderObj,
         isOnline: true
       })
 
@@ -118,29 +108,93 @@ export default function LoginPage() {
     }
   }
 
-  // Handle Demo/Mock Login
-  const handleDemoLogin = () => {
-    setLoading(true)
-    setTimeout(() => {
-      const mockRider = {
-        name: 'Alex Rider',
-        email: 'alex.rider@foodgenie.com',
-        phone: '+92 300 9876543',
-        isOnline: true
-      }
-      localStorage.setItem('token', 'mock_rider_token_999')
-      localStorage.setItem('rider', JSON.stringify(mockRider))
-      setRider(mockRider)
-      setLoading(false)
-      navigate('/dashboard')
-    }, 800)
-  }
-
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 md:p-12 lg:p-0 bg-[#FFF8F0]">
+    <main className="min-h-screen flex items-center justify-center p-4 md:p-12 lg:p-0 bg-[#FFF8F0] relative">
+      {/* Onboarding Modal for New Google Riders */}
+      {onboardingData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl border border-[#ab3500]/20 space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-extrabold text-[#261814]">Complete Rider Sign Up</h2>
+              <p className="text-xs text-[#594139]">Provide your phone and password to finish setup</p>
+            </div>
+
+            {/* Google Profile Card */}
+            <div className="bg-[#fff1ed] p-4 rounded-2xl border border-[#ab3500]/20 flex items-center gap-4">
+              {onboardingData.googleProfile?.photoURL ? (
+                <img
+                  src={onboardingData.googleProfile.photoURL}
+                  alt="Google Profile"
+                  className="w-14 h-14 rounded-full border-2 border-[#ab3500] object-cover shadow-sm"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-[#ab3500] text-white font-bold flex items-center justify-center text-xl shadow-sm">
+                  {onboardingData.googleProfile?.name?.charAt(0) || 'G'}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-base text-[#261814] truncate">{onboardingData.googleProfile?.name}</h4>
+                <p className="text-xs text-[#594139] truncate">{onboardingData.googleProfile?.email}</p>
+                <span className="text-[10px] font-extrabold text-[#ab3500] uppercase tracking-wider">Verified by Google</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleCompleteOnboarding} className="space-y-4">
+              {/* Phone */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#261814]">Phone Number *</label>
+                <input
+                  type="text"
+                  value={onboardPhone}
+                  onChange={(e) => setOnboardPhone(e.target.value)}
+                  placeholder="+92 300 1234567"
+                  required
+                  className="w-full px-4 py-3 bg-[#fff1ed] rounded-xl outline-none text-sm text-[#261814] border border-[#ab3500]/20 focus:ring-2 focus:ring-[#ab3500]/20"
+                />
+              </div>
+
+              {/* Set Password */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#261814]">Set Password (For manual login) *</label>
+                <input
+                  type="password"
+                  value={onboardPassword}
+                  onChange={(e) => setOnboardPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-[#fff1ed] rounded-xl outline-none text-sm text-[#261814] border border-[#ab3500]/20 focus:ring-2 focus:ring-[#ab3500]/20"
+                />
+              </div>
+
+              {onboardError && (
+                <p className="text-xs font-semibold text-red-600 text-center bg-red-50 p-2 rounded-lg">{onboardError}</p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingData(null)}
+                  className="flex-1 py-3 border border-gray-300 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 bg-[#ab3500] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#ff6b35] transition-all"
+                >
+                  {loading ? 'Saving...' : 'Finish Registration'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row bg-[#FFF8F0] rounded-[32px] overflow-hidden shadow-2xl lg:h-[800px] border border-primary/10">
 
-        {/* ── Branding Panel (desktop only) ──────────────────── */}
+        {/* Branding Panel (desktop only) */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-[#ff6b35] p-20 flex-col justify-between overflow-hidden">
           <div className="absolute inset-0 opacity-20 pointer-events-none">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#ab3500] rounded-full blur-[100px]" />
@@ -163,11 +217,11 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="relative z-10 mt-6">
-            <p className="text-[18px] text-white/80">Join 10k+ professional riders delivering with Food Genie.</p>
+            <p className="text-[18px] text-white/80">Join professional riders delivering with Food Genie in Vehari.</p>
           </div>
         </div>
 
-        {/* ── Auth Panel ─────────────────────────────────────── */}
+        {/* Auth Panel */}
         <div className="w-full lg:w-1/2 flex items-center justify-center bg-[#FFF8F0] p-6 md:p-12 overflow-y-auto">
           <div className="w-full max-w-[420px] space-y-8">
 
@@ -204,6 +258,28 @@ export default function LoginPage() {
               >
                 Register
               </button>
+            </div>
+
+            {/* Google Signup Button */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white border border-[#e1bfb5]/50 rounded-full hover:bg-[#fff1ed] transition-all active:scale-95 cursor-pointer shadow-sm font-semibold text-[#261814] text-sm disabled:opacity-50"
+            >
+              <img
+                src="https://developers.google.com/identity/images/g-logo.png"
+                width="20"
+                height="20"
+                alt="Google"
+              />
+              <span>Continue with Google</span>
+            </button>
+
+            <div className="flex items-center gap-3 my-2">
+              <div className="flex-1 h-px bg-[#e1bfb5]/30"></div>
+              <span className="text-xs text-[#8d7168] font-bold uppercase">or email</span>
+              <div className="flex-1 h-px bg-[#e1bfb5]/30"></div>
             </div>
 
             {/* Form */}
@@ -310,36 +386,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Social Logins */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-[#e1bfb5]/50 rounded-full hover:bg-[#fff1ed] transition-colors active:scale-95 cursor-pointer shadow-sm disabled:opacity-50"
-              >
-                <img
-                  src="https://developers.google.com/identity/images/g-logo.png"
-                  width="20"
-                  height="20"
-                  alt="Google"
-                />
-                <span className="text-[14px] font-semibold text-slate-800">
-                  {loading ? 'Signing in...' : 'Google'}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('facebook')}
-                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-[#e1bfb5]/50 rounded-full hover:bg-[#fff1ed] transition-colors active:scale-95 cursor-pointer shadow-sm"
-              >
-                <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                <span className="text-[14px] font-semibold text-slate-800">Facebook</span>
-              </button>
-            </div>
 
             {/* Footer */}
             <div className="pt-4 text-center">

@@ -120,6 +120,26 @@ export default function Dashboard() {
       {/* ── Main Content ──────────────────────────────────────────────────── */}
       <main className="mt-16 px-margin-mobile py-6 flex flex-col gap-6">
 
+        {/* Pending Admin Approval Notice */}
+        {rider && rider.is_approved === false && (
+          <div className="bg-[#FFB703]/15 border border-[#FFB703] p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-[#FFB703] text-black font-bold flex items-center justify-center text-xl shrink-0">
+                ⏳
+              </div>
+              <div>
+                <h3 className="font-bold text-[#261814] text-base">Application Pending Admin Approval</h3>
+                <p className="text-xs text-[#594139] mt-0.5 max-w-xl leading-relaxed">
+                  Your rider application has been submitted to Food Genie Admin for review. Once approved, you will get full access to accept delivery orders!
+                </p>
+              </div>
+            </div>
+            <span className="bg-[#FFB703] text-black font-bold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
+              Pending Review
+            </span>
+          </div>
+        )}
+
         {/* Online Status Toggle */}
         <div className="flex items-center justify-between bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-primary/10">
           <div className="flex items-center gap-3">
