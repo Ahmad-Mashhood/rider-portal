@@ -50,6 +50,11 @@ export const loginRiderWithGoogle = async (extraDetails = null) => {
         return response.data
         
     } catch (error) {
+        if (error.code === 'auth/unauthorized-domain') {
+            throw new Error(
+                'Firebase Auth Error (auth/unauthorized-domain): rider-portal-ochre.vercel.app is not added to Firebase Authorized Domains.'
+            )
+        }
         if (error.code === 'auth/popup-closed-by-user') {
             throw new Error('Login cancelled. Please try again')
         }
