@@ -2,6 +2,10 @@ import { auth, googleProvider } from '../firebase'
 import { signInWithPopup, signOut } from 'firebase/auth'
 import API from '../api'
 
+googleProvider.setCustomParameters({
+    prompt: 'select_account'
+})
+
 export const loginRiderWithGoogle = async (extraDetails = null) => {
     try {
         const result = await signInWithPopup(
@@ -50,7 +54,7 @@ export const loginRiderWithGoogle = async (extraDetails = null) => {
             throw new Error('Login cancelled. Please try again')
         }
         if (error.code === 'auth/popup-blocked') {
-            throw new Error('Popup blocked. Please allow popups')
+            throw new Error('Popup blocked. Please allow popups in your browser settings')
         }
         if (error.code === 'auth/network-request-failed') {
             throw new Error('Network error. Check your internet connection')
