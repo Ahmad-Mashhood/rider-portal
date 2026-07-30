@@ -4,6 +4,7 @@ import { useAuth } from '../context/AppContext'
 import API from '../api'
 import { loginRiderWithGoogle, completeRiderOnboarding } from '../api/googleAuth'
 import logo from '../assets/logo_transparent.png'
+import ForgotPasswordModal from '../components/ForgotPasswordModal'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const [isForgotOpen, setIsForgotOpen] = useState(false)
 
   // Form states
   const [name, setName] = useState('')
@@ -349,6 +351,13 @@ export default function LoginPage() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center px-1">
                     <label className="text-[14px] font-semibold text-[#261814]">Password</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotOpen(true)}
+                      className="text-[12px] font-bold text-[#ab3500] hover:underline cursor-pointer"
+                    >
+                      Forgot Password?
+                    </button>
                   </div>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#8d7168] group-focus-within:text-[#ab3500] transition-colors">
@@ -398,6 +407,11 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+      />
     </main>
   )
 }
