@@ -70,7 +70,7 @@ export default function EarningsOverview() {
           <div>
             <p className="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">{label}</p>
             <h2 className="text-on-background font-headline-lg text-headline-lg mt-1">
-              ${value.toFixed(2)}
+              Rs. {value.toFixed(0)}
             </h2>
           </div>
           <button className="w-full bg-primary-container text-white font-label-bold text-label-bold py-4 rounded-lg active:translate-y-0.5 transition-all shadow-md flex items-center justify-center gap-2">
@@ -85,13 +85,13 @@ export default function EarningsOverview() {
         <section className="bg-surface rounded-xl p-md shadow-sm border border-outline-variant/30">
           <div className="flex justify-between items-end h-40 gap-2 mb-2">
             {[
-              { day: 'MON', h: '40%' },
-              { day: 'TUE', h: '65%' },
-              { day: 'WED', h: '90%', highlight: true },
-              { day: 'THU', h: '55%' },
-              { day: 'FRI', h: '75%' },
-              { day: 'SAT', h: '30%' },
-              { day: 'SUN', h: '20%' },
+              { day: 'MON', h: '0%' },
+              { day: 'TUE', h: '0%' },
+              { day: 'WED', h: '0%' },
+              { day: 'THU', h: '0%' },
+              { day: 'FRI', h: '0%' },
+              { day: 'SAT', h: '0%' },
+              { day: 'SUN', h: '0%' },
             ].map(({ day, h, highlight }) => (
               <div key={day} className="flex-1 flex flex-col items-center gap-2">
                 <div
@@ -121,7 +121,7 @@ export default function EarningsOverview() {
           </div>
           <div className="bg-surface p-md rounded-xl shadow-sm border-l-4 border-primary">
             <p className="text-on-surface-variant text-label-md font-label-md">Avg. Per Order</p>
-            <p className="text-on-background text-headline-md font-headline-md mt-1">${avgPerOrder.toFixed(2)}</p>
+            <p className="text-on-background text-headline-md font-headline-md mt-1">Rs. {avgPerOrder.toFixed(0)}</p>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ export default function EarningsOverview() {
                     <p className="text-xs text-on-surface-variant">{item.time}</p>
                   </div>
                 </div>
-                <p className="font-headline-md text-primary">+${item.amount.toFixed(2)}</p>
+                <p className="font-headline-md text-primary">+Rs. {item.amount.toFixed(0)}</p>
               </div>
             ))}
 

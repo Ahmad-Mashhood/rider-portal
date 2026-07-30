@@ -48,19 +48,15 @@ export const DeliveryContext = createContext(null)
 const DELIVERY_STATUSES = ['accepted', 'picked_up', 'on_the_way', 'delivered']
 
 const deliveryInitialState = {
-  deliveryStatus: 'accepted',    // current step in the machine
+  deliveryStatus: 'accepted',
   earnings: {
-    today: 42.70,
-    weekly: 450.20,
-    monthly: 1820.00,
+    today: 0.00,
+    weekly: 0.00,
+    monthly: 0.00,
   },
-  completedOrders: [
-    { id: 'GH-9021', time: 'Today, 2:45 PM', amount: 16.50 },
-    { id: 'GH-8944', time: 'Today, 1:12 PM', amount: 12.00 },
-    { id: 'GH-8812', time: 'Yesterday, 8:30 PM', amount: 14.20 },
-  ],
-  totalDeliveries: 32,
-  avgPerOrder: 14.00,
+  completedOrders: [],
+  totalDeliveries: 0,
+  avgPerOrder: 0.00,
 }
 
 function deliveryReducer(state, action) {

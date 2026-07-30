@@ -186,11 +186,13 @@ export default function AvailableOrders() {
               </div>
               <div className="bg-surface-container-lowest p-3 rounded-lg shadow-sm order-card-border flex flex-col justify-between h-24">
                 <p className="text-on-surface-variant font-label-md text-label-md">Avg. Payout</p>
-                <p className="text-headline-md font-headline-md text-primary-container">$12</p>
+                <p className="text-headline-md font-headline-md text-primary-container">
+                  Rs. {orders.length > 0 ? (orders.reduce((acc, o) => acc + (o.payout || 150), 0) / orders.length).toFixed(0) : 0}
+                </p>
               </div>
               <div className="bg-surface-container-lowest p-3 rounded-lg shadow-sm order-card-border flex flex-col justify-between h-24">
                 <p className="text-on-surface-variant font-label-md text-label-md">Avg. Dist.</p>
-                <p className="text-headline-md font-headline-md text-primary-container">3.2km</p>
+                <p className="text-headline-md font-headline-md text-primary-container">2.5 km</p>
               </div>
             </div>
 
@@ -220,7 +222,7 @@ export default function AvailableOrders() {
                   <div className="flex justify-between items-start">
                     <span className="font-label-bold text-label-bold text-primary-container">#{order.id}</span>
                     <span className="font-headline-md text-headline-md text-tertiary-container font-black">
-                      ${order.payout.toFixed(2)}
+                      Rs. {(order.payout || 150).toFixed(0)}
                     </span>
                   </div>
                   <div className="flex items-center gap-6">
