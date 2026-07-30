@@ -20,7 +20,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onPasswordResetSu
     setInfoMsg('')
     try {
       const res = await API.post('/api/auth/forgot-password', { email: email.trim() })
-      setInfoMsg(res.data.message + (res.data.otp_demo ? ` (OTP Code: ${res.data.otp_demo})` : ''))
+      setInfoMsg(res.data.message || `Verification code sent to ${email.trim()}. Please check your Gmail inbox.`)
       setStep(2)
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Failed to send verification code.')
