@@ -45,7 +45,7 @@ export default function ActiveDelivery() {
   const navigate = useNavigate()
   const { currentOrder, clearCurrentOrder } = useOrders()
   const { deliveryStatus, advanceStatus, completeDelivery, resetStatus } = useDelivery()
-  const { rider } = useAuth()
+  const { rider, toggleOnline, notifications = [], setIsNotifOpen } = useAuth()
 
   const [processingDelivered, setProcessingDelivered] = useState(false)
   const [currentRouteStepIdx, setCurrentRouteStepIdx] = useState(0)
@@ -71,6 +71,18 @@ export default function ActiveDelivery() {
     return () => navigator.geolocation.clearWatch(watchId)
   }, [rider?.id])
 
+  // Use currentOrder or a sensible fallback so the page always renders
+  const order = currentOrder || {
+    id: '2489',
+    restaurant: 'Food Genie Partner Restaurant',
+    restaurantAddress: 'Jinnah Shaheed Road, Vehari',
+    customer: { name: 'Customer User', address: 'People Colony, Vehari' },
+    customerAddress: 'People Colony, Vehari',
+    payout: 180,
+    estimatedTime: '12 mins',
+    distance: '2.4 km away',
+  }
+
   async function handleActionButton() {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     const orderId = order.id
@@ -83,11 +95,11 @@ export default function ActiveDelivery() {
         console.error('Failed to update status to delivered', err)
       }
       setTimeout(() => {
-        completeDelivery({ id: order.id, payout: order.payout })
+        completeDelivery({ id: order.id, payout: order.payout || 180 })
         clearCurrentOrder()
         resetStatus()
         setProcessingDelivered(false)
-        navigate('/orders')
+        navigate('/deliveries')
       }, 1500)
     } else if (deliveryStatus !== 'delivered') {
       const nextStatus = deliveryStatus === 'accepted' ? 'preparing' : 'out_for_delivery'
@@ -117,7 +129,6 @@ export default function ActiveDelivery() {
       maxZoom: 19
     }).addTo(map)
 
-    // Pins using beautiful L.divIcon matching the Stitch design system
     const restaurantIcon = window.L.divIcon({
       html: `<div class="bg-[#ff6b35] text-white p-2 rounded-full shadow-lg border-2 border-white flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">restaurant</span></div>`,
       className: '',
@@ -142,7 +153,6 @@ export default function ActiveDelivery() {
     window.L.marker(ROUTE_COORDINATES[0], { icon: restaurantIcon }).addTo(map)
     window.L.marker(ROUTE_COORDINATES[ROUTE_COORDINATES.length - 1], { icon: customerIcon }).addTo(map)
 
-    // Route line
     window.L.polyline(ROUTE_COORDINATES, {
       color: '#ff6b35',
       weight: 6,
@@ -150,11 +160,9 @@ export default function ActiveDelivery() {
       dashArray: '5, 10'
     }).addTo(map)
 
-    // Rider
     const riderMarker = window.L.marker(ROUTE_COORDINATES[0], { icon: riderIcon }).addTo(map)
     markerRef.current = riderMarker
 
-    // Adjust view to fit bounds
     map.fitBounds(ROUTE_COORDINATES, { padding: [50, 50] })
 
     return () => {
@@ -201,39 +209,11 @@ export default function ActiveDelivery() {
     }
   }, [deliveryStatus])
 
-  // Use currentOrder or a sensible fallback so the page always renders
-  const order = currentOrder || {
-    id: '2489',
-    restaurant: 'Burger Genie Central',
-    restaurantAddress: '452 Broadway, Manhattan',
-    customer: { name: 'James Wilson', address: 'Apt 4B, 112 W 34th St' },
-    payout: 15.50,
-    estimatedTime: '8 mins',
-    distance: '2.4 miles',
-  }
-
   const currentStepIdx = STATUS_STEPS.findIndex(s => s.key === deliveryStatus)
-
-  function handleActionButton() {
-    if (deliveryStatus === 'on_the_way') {
-      // Final step: complete delivery
-      setProcessingDelivered(true)
-      setTimeout(() => {
-        completeDelivery({ id: order.id, payout: order.payout })
-        clearCurrentOrder()
-        resetStatus()
-        setProcessingDelivered(false)
-        navigate('/orders')
-      }, 1500)
-    } else if (deliveryStatus !== 'delivered') {
-      advanceStatus()
-    }
-  }
 
   if (!rider || !rider.isOnline) {
     return (
       <div className="bg-background text-[#2B2D42] font-body-md min-h-screen flex flex-col justify-between">
-        {/* Top AppBar */}
         <header className="fixed top-0 left-0 w-full z-40 flex items-center justify-between px-margin-mobile h-16 bg-surface shadow-sm">
           <div className="flex items-center gap-4">
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">
@@ -242,7 +222,7 @@ export default function ActiveDelivery() {
           </div>
           <div className="flex items-center">
             <button
-              onClick={() => setIsNotifOpen(true)}
+              onClick={() => setIsNotifOpen && setIsNotifOpen(true)}
               className="flex items-center justify-center p-2 text-on-surface-variant hover:opacity-80 active:scale-95 transition-transform relative"
               title="Notifications"
             >
@@ -254,7 +234,6 @@ export default function ActiveDelivery() {
           </div>
         </header>
 
-        {/* Lock Screen */}
         <main className="flex-grow pt-16 pb-20 flex flex-col items-center justify-center px-6">
           <div className="bg-surface-container-lowest rounded-2xl p-8 text-center shadow-lg border border-primary/10 flex flex-col items-center justify-center py-16 gap-4 w-full max-w-sm">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 animate-pulse">
@@ -282,8 +261,6 @@ export default function ActiveDelivery() {
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-hidden">
-
-      {/* ── TopAppBar ─────────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 w-full z-40 flex items-center justify-between px-margin-mobile h-16 bg-surface shadow-sm">
         <div className="flex items-center gap-4">
           <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">
@@ -292,7 +269,7 @@ export default function ActiveDelivery() {
         </div>
         <div className="flex items-center">
           <button
-            onClick={() => setIsNotifOpen(true)}
+            onClick={() => setIsNotifOpen && setIsNotifOpen(true)}
             className="flex items-center justify-center p-2 text-on-surface-variant hover:opacity-80 active:scale-95 transition-transform relative"
             title="Notifications"
           >
@@ -305,20 +282,13 @@ export default function ActiveDelivery() {
       </header>
 
       <main className="flex-grow pt-16 pb-20 relative flex flex-col h-screen">
-
-        {/* ── Map Section (Top 50%) ──────────────────────────────────────── */}
         <section className="h-1/2 w-full relative bg-surface-container-high overflow-hidden">
-          {/* Leaflet Map Div container */}
           <div id="delivery-map" className="w-full h-full z-0" />
         </section>
 
-        {/* ── Delivery Info Card (Bottom Sheet) ─────────────────────────── */}
         <section className="h-1/2 w-full bg-surface-container-lowest rounded-t-[32px] shadow-[0_-8px_24px_rgba(43,45,66,0.08)] z-20 flex flex-col px-margin-mobile py-6 overflow-y-auto border-t border-outline-variant">
-
-          {/* Pull Handle */}
           <div className="w-12 h-1.5 bg-surface-variant rounded-full mx-auto mb-6" />
 
-          {/* Header Info */}
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="font-headline-md text-headline-md text-on-surface">Order #{order.id}</h2>
@@ -326,27 +296,24 @@ export default function ActiveDelivery() {
             </div>
             <div className="text-right">
               <div className="font-headline-lg-mobile text-headline-lg-mobile text-tertiary-container font-black">
-                {order.estimatedTime || '8 mins'}
+                {order.estimatedTime || '12 mins'}
               </div>
               <div className="font-label-bold text-label-bold text-tertiary">
-                {order.distance || '2.4 miles away'}
+                {order.distance || '2.4 km away'}
               </div>
             </div>
           </div>
 
-          {/* Status Tracker — 4-step version */}
           <div className="relative flex justify-between items-center mb-8 px-2">
             <div className="absolute top-4 left-0 w-full h-[2px] bg-surface-variant z-0" />
-            {/* Filled progress line */}
             <div
               className="absolute top-4 left-0 h-[2px] bg-primary-container z-0 transition-all duration-500"
-              style={{ width: `${(currentStepIdx / (STATUS_STEPS.length - 1)) * 100}%` }}
+              style={{ width: `${(Math.max(0, currentStepIdx) / (STATUS_STEPS.length - 1)) * 100}%` }}
             />
 
             {STATUS_STEPS.map((step, idx) => {
               const isDone = idx < currentStepIdx
               const isCurrent = idx === currentStepIdx
-              const isPending = idx > currentStepIdx
               return (
                 <div key={step.key} className="relative z-10 flex flex-col items-center gap-1">
                   <div
@@ -382,16 +349,10 @@ export default function ActiveDelivery() {
             })}
           </div>
 
-          {/* Delivery Details Grid */}
           <div className="grid grid-cols-1 gap-3 mb-6">
-            {/* Restaurant */}
             <div className="bg-surface-container p-4 rounded-xl flex items-center gap-4 border-l-4 border-primary-container">
-              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGBt_SNvzjOir_DrIiYa-s0xNegjaBzHiMp17lm8-VshQahQjqzwrEYEszg7yQ7LW38IipQJKdD4YZltw55AGB__3hoTdLhbxMMNEvYoihvyqGpHmHf2DAS_JtFyS7K68e6HeBDgSOpRXf1W-cwGIx_yF74rCG-6BZQP1MCeXMjxp8cBkaMzHOkcZo6P4EKxhJrB9BTcoe19Vr3JAONiyA3REE7dOWkhlEjdRJyfKdaRt-w-VcCM7iwjQC887Rmu_RrmI6pX9BqSO0"
-                  alt="Restaurant food"
-                />
+              <div className="w-12 h-12 rounded-lg bg-[#ff6b35]/15 text-[#ff6b35] flex items-center justify-center font-bold shrink-0">
+                <span className="material-symbols-outlined text-2xl">storefront</span>
               </div>
               <div className="flex-grow">
                 <h3 className="font-label-bold text-label-bold text-on-surface">{order.restaurant}</h3>
@@ -405,17 +366,12 @@ export default function ActiveDelivery() {
               </div>
             </div>
 
-            {/* Customer */}
             <div className="bg-surface-container p-4 rounded-xl flex items-center gap-4 border-l-4 border-secondary">
-              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-surface-container-high border border-outline-variant">
-                <img
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDo7pK9TEDfSu_ONvPHkqtSCZBSP0-NkaWekOmr0ipOfd7gtwVQd4odZZ5JsiwsPLcJCDoYfdjEhxbu1s_9vC1nfAn6UFP3MXFQxFjERAkCUYPMjOQuv2pFz_tLMJbwTjz2_7FJTPSh48uPTs0Q4NDX3C1gLS9QyNRX8AD2zZH3fdnXVKgSR3nL-pk2wozMYc87GLKoLWQE0ERO_zr0PrXZfM343Idg846chvRBc5082Dby-NHo9vuACufSOXlc9dziXiekZCWRGVBL"
-                  alt="Customer"
-                />
+              <div className="w-12 h-12 rounded-full bg-[#b7102a]/15 text-[#b7102a] flex items-center justify-center font-bold shrink-0">
+                <span className="material-symbols-outlined text-2xl">person</span>
               </div>
               <div className="flex-grow">
-                <h3 className="font-label-bold text-label-bold text-on-surface">{order.customer?.name || 'Customer'}</h3>
+                <h3 className="font-label-bold text-label-bold text-on-surface">{order.customer?.name || 'Customer User'}</h3>
                 <p className="text-xs text-on-surface-variant truncate">{order.customer?.address || order.customerAddress}</p>
               </div>
               <div className="flex gap-2">
@@ -429,7 +385,6 @@ export default function ActiveDelivery() {
             </div>
           </div>
 
-          {/* Action Button */}
           <button
             id="btn-delivery-action"
             onClick={handleActionButton}
