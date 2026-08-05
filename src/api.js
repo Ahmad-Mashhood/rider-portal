@@ -26,7 +26,7 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/reset-password')) {
             localStorage.removeItem('token')
             localStorage.removeItem('user')
             window.location.href = '/login'
@@ -34,5 +34,21 @@ API.interceptors.response.use(
         return Promise.reject(error)
     }
 )
+
+export const forgotPassword = async (email, frontendUrl = null) => {
+    const response = await API.post('/api/auth/forgot-password', {
+        email,
+        frontend_url: frontendUrl || window.location.origin
+    })
+    return response.data
+}
+
+export const resetPassword = async (token, newPassword) => {
+    const response = await API.post('/api/auth/reset-password', {
+        token: token,
+        new_password: newPassword
+    })
+    return response.data
+}
 
 export default API

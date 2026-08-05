@@ -351,13 +351,13 @@ export default function LoginPage() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center px-1">
                     <label className="text-[14px] font-semibold text-[#261814]">Password</label>
-                    <button
-                      type="button"
-                      onClick={() => setIsForgotOpen(true)}
+                    <Link
+                      to="/forgot-password"
                       className="text-[12px] font-bold text-[#ab3500] hover:underline cursor-pointer"
                     >
                       Forgot Password?
-                    </button>
+                    </Link>
+
                   </div>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#8d7168] group-focus-within:text-[#ab3500] transition-colors">

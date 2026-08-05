@@ -11,9 +11,12 @@ import EarningsOverview from './pages/EarningsOverview'
 import MockAuthPage from './pages/MockAuthPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsOfServicePage from './pages/TermsOfServicePage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import NotificationDrawer from './components/NotificationDrawer'
 
 // Simple route guard
+
 function ProtectedRoute({ children }) {
   const { rider } = useAuth()
   if (!rider) {
@@ -103,7 +106,10 @@ export default function App() {
       <Routes location={displayLocation}>
         <Route path="/" element={<SplashPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/mock-auth/:provider" element={<MockAuthPage />} />
+
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
